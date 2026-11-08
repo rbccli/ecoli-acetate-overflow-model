@@ -17,7 +17,7 @@ params = global_parameters_balanced();
 
 
 T = readtable( ...
-    'posterior0915.csv');
+    'posterior1024.csv');
 
 
 
@@ -115,13 +115,13 @@ y0 = [
 
 
 % Alpha fold change: alpha/alpha_0
-alpha_fold_list = linspace(0.05, 100, 100);
+alpha_fold_list = linspace(0.1, 10, 100);
 alpha_fold_row  = alpha_fold_list(:)';
 
 
 
 % NAD(H)-pool fold change: pool/pool_0
-pool_fold_list = linspace(0.5, 5, 100);
+pool_fold_list = linspace(0.2, 5, 100);
 pool_fold_row  = pool_fold_list(:)';
 
 
@@ -137,7 +137,7 @@ n_pool_grid  = numel(pool_fold_list);
 
 
 
-beta_list = linspace(0, 1, 21);
+beta_list = linspace(0, 1, 11);
 n_beta = numel(beta_list);
 
 
@@ -182,7 +182,9 @@ end
 
 
 
-%% Run beta scan
+%% Run beta scan with references anchored at beta = 1
+
+fprintf('Inhibition references: beta = 1 for every posterior sample.\n');
 
 
 
@@ -236,7 +238,7 @@ for b = 1:n_beta
         p.enzyme_pta = theta(i,9);
         p.acetate_constant = theta(i,10);
         p.enzyme_md  = theta(i,11);
-        p.enzyme_f   = theta(i,12);
+        p.enzyme_fumarase   = theta(i,12);
         p.enzyme_ack = theta(i,13);
         p.k = theta(i,14);
 
@@ -248,9 +250,10 @@ for b = 1:n_beta
 
 
 
-        % PDH-inhibition scaling
+        % Calculate this sample's inhibition references with full PDH feedback.
+        % beta_b is applied only after the beta=1 references have been fixed.
 
-        p.beta = beta_b;
+        p.beta = 1;
 
 
 
@@ -267,7 +270,7 @@ for b = 1:n_beta
 
 
 
-        %% Step 1: initial baseline simulation
+        %% Step 1: reference-state simulation at beta = 1
 
 
 
@@ -321,7 +324,7 @@ for b = 1:n_beta
 
 
 
-        %% Step 2: calculate inhibition baselines
+        %% Step 2: fix inhibition references from the beta = 1 state
 
 
 
@@ -352,7 +355,12 @@ for b = 1:n_beta
 
 
 
-        %% Step 3: rerun the baseline simulation
+        % Keep these beta=1 references throughout the current beta's baseline
+        % and both perturbations. Identical beta=1 inputs give the same
+        % sample-specific references at every beta in this scan.
+        p.beta = beta_b;
+
+        %% Step 3: verify the baseline at the scanned beta
 
 
 
@@ -956,10 +964,7 @@ alpha_colour = red;
 pool_colour  = blue;
 
 
-%% Common axis settings
-
-common_ylim   = [-0.15, 0.05];
-common_yticks = -0.15:0.05:0.05;
+%% Common beta-axis settings; y axes use independent ranges
 
 common_xlim   = [-0.05, 1.05];
 common_xticks = [0, 0.5, 1];
@@ -976,6 +981,13 @@ alpha_hi_plot    = alpha_ferm_slope_hi(:)';
 pool_slope_plot = pool_ferm_beta_slope(:)';
 pool_lo_plot    = pool_ferm_slope_lo(:)';
 pool_hi_plot    = pool_ferm_slope_hi(:)';
+
+% Include zero, the median, and the full uncertainty band in each panel.
+alpha_ylim = independent_slope_ylim( ...
+    [0, alpha_slope_plot, alpha_lo_plot, alpha_hi_plot]);
+pool_ylim = independent_slope_ylim( ...
+    [0, pool_slope_plot, pool_lo_plot, pool_hi_plot]);
+
 
 
 %% Define thresholds and feasible region
@@ -1008,10 +1020,10 @@ hold(ax_alpha, 'on');
 ax_alpha.XScale = 'linear';
 
 xlim(ax_alpha, common_xlim);
-ylim(ax_alpha, common_ylim);
+ylim(ax_alpha, alpha_ylim);
 
 xticks(ax_alpha, common_xticks);
-yticks(ax_alpha, common_yticks);
+yticks(ax_alpha, 'auto');
 
 
 %% Feasible region
@@ -1021,8 +1033,8 @@ if have_feasible_region
     h_feasible_patch = patch(ax_alpha, ...
         [feasible_lower, feasible_upper, ...
          feasible_upper, feasible_lower], ...
-        [common_ylim(1), common_ylim(1), ...
-         common_ylim(2), common_ylim(2)], ...
+        [alpha_ylim(1), alpha_ylim(1), ...
+         alpha_ylim(2), alpha_ylim(2)], ...
         feasible_colour, ...
         'FaceAlpha', 0.18, ...
         'EdgeColor', 'none');
@@ -1120,10 +1132,10 @@ hold(ax_pool, 'on');
 ax_pool.XScale = 'linear';
 
 xlim(ax_pool, common_xlim);
-ylim(ax_pool, common_ylim);
+ylim(ax_pool, pool_ylim);
 
 xticks(ax_pool, common_xticks);
-yticks(ax_pool, common_yticks);
+yticks(ax_pool, 'auto');
 
 
 %% Feasible region
@@ -1133,8 +1145,8 @@ if have_feasible_region
     patch(ax_pool, ...
         [feasible_lower, feasible_upper, ...
          feasible_upper, feasible_lower], ...
-        [common_ylim(1), common_ylim(1), ...
-         common_ylim(2), common_ylim(2)], ...
+        [pool_ylim(1), pool_ylim(1), ...
+         pool_ylim(2), pool_ylim(2)], ...
         feasible_colour, ...
         'FaceAlpha', 0.18, ...
         'EdgeColor', 'none', ...
@@ -1242,16 +1254,20 @@ for ax = [ax_alpha, ax_pool]
     ax.XScale = 'linear';
 
     xlim(ax, common_xlim);
-    ylim(ax, common_ylim);
 
     xticks(ax, common_xticks);
-    yticks(ax, common_yticks);
 
     ax.XColor = black;
 
     box(ax, 'off');
 
 end
+
+% Restore each panel's independent range after journal styling.
+ylim(ax_alpha, alpha_ylim);
+ylim(ax_pool, pool_ylim);
+yticks(ax_alpha, 'auto');
+yticks(ax_pool, 'auto');
 
 % Suppress upper-panel x tick labels again
 ax_alpha.XTickLabel = [];
@@ -1263,7 +1279,7 @@ ax_alpha.YColor = alpha_colour;
 ax_pool.YColor  = pool_colour;
 
 
-%% Shared y-axis label
+%% Shared quantity label; numerical y-axis ranges remain independent
 
 h_ylabel_common = ylabel(tl, ...
     'Regression slope of fermentation flux');
@@ -1494,4 +1510,17 @@ function beta_star = first_zero_crossing( ...
 
 
 
+end
+
+
+function limits = independent_slope_ylim(values)
+    values = values(isfinite(values));
+    if isempty(values)
+        limits = [-0.01, 0.01];
+        return;
+    end
+    lower = min(values(:));
+    upper = max(values(:));
+    padding = max(0.12 * (upper - lower), 1e-5);
+    limits = [lower - padding, upper + padding];
 end

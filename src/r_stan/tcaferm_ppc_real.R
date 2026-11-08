@@ -657,6 +657,6 @@ final_fig <- final_fig &
 final_fig
 
 
-save_journal_plot(p_met_ppc, "tcaferm_real_met_ppc_final0915", width = 20, height = 10)
-save_journal_plot(p_flux_ppc, "tcaferm_real_flux_ppc_final0915", width = 20, height = 10)
-save_journal_plot(final_fig, "tcaferm_real_final_fig_final0915", width = 20, height = 15)
+save_journal_plot(p_met_ppc, "tcaferm_real_met_ppc_final1024", width = 20, height = 10)
+save_journal_plot(p_flux_ppc, "tcaferm_real_flux_ppc_final1024", width = 20, height = 10)
+save_journal_plot(final_fig, "tcaferm_real_final_fig_final1024", width = 20, height = 15)

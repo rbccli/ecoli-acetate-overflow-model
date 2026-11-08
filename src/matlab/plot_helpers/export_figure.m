@@ -5,7 +5,7 @@ function export_figure(fig, filename, varargin)
     addParameter(p, 'Resolution', 600);
     addParameter(p, 'ExportPDF', false);
     addParameter(p, 'ExportPNG', true);
-    addParameter(p, 'OutputFolder', '/Users/rebeccali/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/MATLAB/figures');
+    addParameter(p, 'OutputFolder', fullfile(pwd, 'figures'));
     parse(p, varargin{:});
     s = p.Results;
 

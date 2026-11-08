@@ -418,17 +418,45 @@ print(tca_ferm_fit_real$summary(), n = Inf)
 
 
 
-mod_gq <- cmdstan_model("tca_ferm_gq.stan")
+# 给这次 subunit 修改后的结果单独建文件夹
+out_dir <- file.path(
+  "results",
+  paste0("stan_subunit_", format(Sys.time(), "%Y%m%d_%H%M%S"))
+)
+dir.create(out_dir, recursive = TRUE)
 
-csvs <- tca_ferm_fit_real$output_files()
-gq_fit <- mod_gq$generate_quantities(
-     data = data_list,
-     fitted_params = csvs
+# 1. 保存各条 chain 的原始 CSV，之后做 generated quantities 也能用
+tca_ferm_fit_real$save_output_files(dir = out_dir)
+
+# 2. 保存完整 fit：后验采样 + 采样诊断
+tca_ferm_fit_real$save_object(
+  file = file.path(out_dir, "stan_fit.rds")
 )
 
-print(gq_fit$summary(), n = Inf)
+# 3. 单独保存后验 draws，保留 chain / iteration 信息
+saveRDS(
+  tca_ferm_fit_real$draws(),
+  file.path(out_dir, "stan_draws.rds")
+)
+
+# 4. 保存 summary 表
+write.csv(
+  tca_ferm_fit_real$summary(),
+  file.path(out_dir, "stan_summary.csv"),
+  row.names = FALSE
+)
+
+# 看实际存到了哪里
+normalizePath(out_dir)
 
 
+library(dplyr)
 
+draws_df <- tca_ferm_fit_real$draws(format = "df")
 
+# 如果你只想保留参数，不要 lp__, chain, iteration 这些
+theta_draws <- draws_df %>%
+  select(-.chain, -.iteration, -.draw)
+
+write.csv(theta_draws, "posterior1024.csv", row.names = FALSE)
 

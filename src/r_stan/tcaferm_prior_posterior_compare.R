@@ -57,7 +57,7 @@ prior_spec <- tibble::tribble(
   "aco_raw",       -2,                           1,
   "akd_raw",       -2,                           1,
   #"scs_raw",       -2,                           1,
-  "scs_raw",       -2.210,                       0.5,
+  "scs_raw",       log10(0.0061704935),                       0.5,
   "sd_raw",        -2,                           1,
   "pk_raw",        -2,                           1,
   "cs_raw",        -2,                           1,
@@ -73,9 +73,9 @@ prior_spec <- tibble::tribble(
   "ack_raw",       -2,                           1,
   
  # "pta_raw",       -2,                           1,
-  "pta_raw",       -3.052,                           0.5,
+  "pta_raw",       log10(0.000887043),                           0.5,
   
-  "k_raw",          log10(83),                   0.5,
+  "k_raw",          2,                   0.5,
   "alpha_raw",      log10(0.0545/2.8),           0.5
   #"k_raw",          1,                           1,
   #"alpha_raw",      -2,                          1
@@ -494,7 +494,7 @@ manual_legend_grob <- grid::grobTree(
   ),
   
   grid::textGrob(
-    label = "Median and 95% CI",
+    label = "Median and 90% CI",
     x = 0.26,
     y = 0.25,
     just = "left",
@@ -600,61 +600,13 @@ prior_posterior_fig
 
 save_journal_plot(
   prior_posterior_fig,
-  "tcaferm_real_prior_posterior_fig_final0915",
+  "tcaferm_real_prior_posterior_fig_final1024",
   width = 20,
   height = 10
 )
 
 
 
-
-
-library(dplyr)
-
-draws_df <- tca_ferm_fit_real$draws(format = "df")
-
-# 如果你只想保留参数，不要 lp__, chain, iteration 这些
-theta_draws <- draws_df %>%
-  select(-.chain, -.iteration, -.draw)
-
-write.csv(theta_draws, "posterior0915.csv", row.names = FALSE)
-
-
-
-library(dplyr)
-library(GGally)
-library(ggplot2)
-
-# 1. 用 base R 读取 CSV，不需要 readr
-post <- read.csv("posterior_draws_all_reversible_nadhnad.csv")
-
-# 2. 检查列名
-names(post)
-
-# 3. 只取 k_raw 和 alpha_raw
-post_pair <- post[, c("k_raw", "alpha_raw")]
-
-# 4. 去掉 NA
-post_pair <- post_pair[complete.cases(post_pair), ]
-
-# 5. 如果样本太多，随机抽样
-set.seed(1)
-n_plot <- min(5000, nrow(post_pair))
-post_pair_sub <- post_pair[sample(seq_len(nrow(post_pair)), n_plot), ]
-
-# 6. 画 pairs
-p <- ggpairs(
-  post_pair_sub,
-  upper = list(continuous = wrap("cor", size = 5)),
-  lower = list(continuous = wrap("points", alpha = 0.15, size = 0.5)),
-  diag  = list(continuous = wrap("densityDiag", alpha = 0.5))
-) +
-  theme_bw(base_size = 12)
-
-print(p)
-
-# 7. 保存
-ggsave("pairs_k_alpha_raw.png", p, width = 6, height = 6, dpi = 300)
 
 
 

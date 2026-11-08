@@ -1,5 +1,4 @@
 %% Sobol sensitivity analysis using total-order indices
-% 
 clear;
 clc;
 close all;
@@ -207,76 +206,19 @@ checkpoint_fields       = fields;
 checkpoint_baseline     = baseline;
 
 
-%% Load an existing checkpoint
+%% Evaluate all samples from scratch
+% Saved checkpoints are outputs only and are never loaded on startup.
 
-if isfile(checkpoint_file)
-
-    fprintf('Existing checkpoint found. Loading...\n');
-
-    C = load(checkpoint_file);
-
-    required_variables = { ...
-        'steady_YA', ...
-        'steady_YB', ...
-        'steady_YAB', ...
-        'okA', ...
-        'okB', ...
-        'okAB', ...
-        'completed_rows', ...
-        'checkpoint_num_samples', ...
-        'checkpoint_fields', ...
-        'checkpoint_baseline' ...
-    };
-
-    if ~all(isfield(C, required_variables))
-        error('The checkpoint is incomplete or incompatible.');
-    end
-
-    same_configuration = ...
-        C.checkpoint_num_samples == num_samples && ...
-        isequal(C.checkpoint_fields, fields) && ...
-        isequaln(C.checkpoint_baseline, baseline);
-
-    if ~same_configuration
-        error([ ...
-            'The existing checkpoint was generated using a different ', ...
-            'sample size, parameter list, or baseline.' ...
-        ]);
-    end
-
-    steady_YA     = C.steady_YA;
-    steady_YB     = C.steady_YB;
-    steady_YAB    = C.steady_YAB;
-
-    okA           = C.okA;
-    okB           = C.okB;
-    okAB          = C.okAB;
-    completed_rows = C.completed_rows;
-
-    fprintf( ...
-        'Resuming from %d/%d completed base samples.\n', ...
-        nnz(completed_rows), ...
-        num_samples ...
-    );
-
-end
-
-
-%% Identify samples that still need to be evaluated
-
-remaining_indices = find(~completed_rows);
-num_remaining      = numel(remaining_indices);
-num_batches        = ceil(num_remaining / batch_size);
+sample_indices = (1:num_samples)';
+num_batches = ceil(num_samples / batch_size);
 
 fprintf( ...
-    'Beginning simulations: %d samples remaining in %d batches.\n', ...
-    num_remaining, ...
+    'Beginning simulations from scratch: %d samples in %d batches.\n', ...
+    num_samples, ...
     num_batches ...
 );
 
 session_timer = tic;
-initial_completed = nnz(completed_rows);
-
 
 %% Run batches
 
@@ -286,10 +228,10 @@ for batch_number = 1:num_batches
 
     last_position = min( ...
         batch_number * batch_size, ...
-        num_remaining ...
+        num_samples ...
     );
 
-    batch_indices = remaining_indices( ...
+    batch_indices = sample_indices( ...
         first_position:last_position ...
     );
 
@@ -424,13 +366,10 @@ for batch_number = 1:num_batches
 
     total_completed = nnz(completed_rows);
 
-    session_completed = ...
-        total_completed - initial_completed;
-
     elapsed_minutes = toc(session_timer) / 60;
 
     samples_per_minute = ...
-        session_completed / max(elapsed_minutes, eps);
+        total_completed / max(elapsed_minutes, eps);
 
     estimated_minutes_remaining = ...
         (num_samples - total_completed) / samples_per_minute;
@@ -712,7 +651,7 @@ output_names = { ...
 %  ================================================================
 
 [mean_total_order, sort_idx] = sort( ...
-    mean(ST_all, 2), ...
+    median(ST_all, 2), ...
     'descend' ...
 );
 
@@ -788,7 +727,7 @@ end
 %  ================================================================
 
 colour_min = 0;
-colour_max = 0.5;
+colour_max = 0.545454545455;   % Halve the unlabelled gap above the 0.5 tick.
 
 % Always include zero
 colour_min = min(0, colour_min);
@@ -805,31 +744,10 @@ end
 
 [fig1, ax1] = make_journal_figure(24, 24);
 
-% A heatmap is a standalone chart and does not use a standard axes.
-delete(ax1);
-
-h2 = heatmap( ...
-    fig1, ...
-    output_names, ...
-    fields_sorted, ...
-    ST_sorted ...
+[h2, colourbar2] = plot_sobol_heatmap( ...
+    fig1, ax1, ST_sorted, output_names, parameter_display_names, ...
+    [colour_min, colour_max] ...
 );
-
-h2.YDisplayLabels = parameter_display_names;
-h2.Interpreter = 'tex';
-
-h2.XLabel = 'Model output';
-h2.YLabel = 'Parameter';
-
-h2.GridVisible = 'off';
-h2.ColorLimits = [colour_min, colour_max];
-% h2.Colormap = parula(256);
-h2.FontSize = 15;
-h2.FontName = 'Arial';
-
-
-% Cell labels become crowded when all outputs are shown
-h2.CellLabelColor = 'none';
 
 
 %% ================================================================
@@ -838,32 +756,10 @@ h2.CellLabelColor = 'none';
 
 [fig2, ax2] = make_journal_figure(28, 28);
 
-% A heatmap is a standalone chart and does not use a standard axes.
-delete(ax2);
-
-h3 = heatmap( ...
-    fig2, ...
-    output_names, ...
-    fields_sorted, ...
-    S_sorted ...
+[h3, colourbar3] = plot_sobol_heatmap( ...
+    fig2, ax2, S_sorted, output_names, parameter_display_names, ...
+    [colour_min, colour_max] ...
 );
-
-h3.YDisplayLabels = parameter_display_names;
-h3.Interpreter = 'tex';
-
-h3.XLabel = 'Model output';
-h3.YLabel = 'Parameter';
-
-h3.GridVisible = 'off';
-h3.ColorLimits = [colour_min, colour_max];
-% h2.Colormap = parula(256);
-h3.FontSize = 15;
-h3.FontName = 'Arial';
-
-
-% Cell labels become crowded when all outputs are shown
-h3.CellLabelColor = 'none';
-
 
 
 %% ================================================================
@@ -923,6 +819,64 @@ disp(sobol_results(1:min(30, height(sobol_results)), :));
 %  Local functions
 %  All functions must remain at the end of the script
 %  ================================================================
+
+function [image_handle, colour_bar] = plot_sobol_heatmap( ...
+    fig, ax, indices, output_names, parameter_labels, colour_limits ...
+)
+% Use regular axes so the colour bar can be positioned independently.
+
+    image_handle = imagesc(ax, indices, colour_limits);
+
+    % Keep the original blues through 0.5, then deepen towards the top.
+    deep_blue = [0, 0.4470, 0.7410];
+    pale_blue = 0.9 + 0.1 * deep_blue;
+    darkest_blue = [0, 0.25, 0.55];
+    colour_values = linspace(colour_limits(1), colour_limits(2), 256)';
+    blue_map = interp1( ...
+        [colour_limits(1), 0.5, colour_limits(2)], ...
+        [pale_blue; deep_blue; darkest_blue], colour_values ...
+    );
+    colormap(ax, blue_map);
+
+    set(ax, ...
+        'Units', 'normalized', ...
+        'FontName', 'Arial', ...
+        'FontSize', 15, ...
+        'TickLabelInterpreter', 'tex', ...
+        'XTick', 1:numel(output_names), ...
+        'XTickLabel', output_names, ...
+        'XTickLabelRotation', 45, ...
+        'YTick', 1:numel(parameter_labels), ...
+        'YTickLabel', parameter_labels, ...
+        'YDir', 'reverse', ...
+        'TickLength', [0, 0], ...
+        'Box', 'on', ...
+        'LineWidth', 0.8 ...
+    );
+
+    xlabel(ax, 'Model output');
+    ylabel(ax, 'Parameter');
+
+    colour_bar = colorbar(ax, 'eastoutside');
+    colour_bar.Units = 'normalized';
+    colour_bar.FontName = 'Arial';
+    colour_bar.FontSize = 13.5;
+    colour_bar.TickLabelInterpreter = 'tex';
+    colour_bar.TickDirection = 'out';
+    % The 0.5 tick sits below the top; the darker extension has no label.
+    colour_bar.Ticks = 0:0.05:0.5;
+    colour_bar.TickLabels = arrayfun( ...
+        @(value) sprintf('%g', value), colour_bar.Ticks, ...
+        'UniformOutput', false ...
+    );
+
+    % Leave a clear gap between the heatmap and its colour bar.
+    ax.Position = [0.22, 0.25, 0.64, 0.70];
+    colour_bar.Position = [0.89, 0.25, 0.02, 0.70];
+
+    fig.Color = 'w';
+end
+
 
 function [ok, yend] = run_one(p)
 

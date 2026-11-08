@@ -1,6 +1,6 @@
-clear;       
-clc;          
-close all; 
+% clear;       
+% clc;          
+% close all; 
 
 params = global_parameters_balanced();
 
@@ -14,12 +14,12 @@ params = global_parameters_balanced();
 % For every other manually edited scenario, set this to false. The script
 % will reload exactly the same theta rows and their matching baselines.
 % -------------------------------------------------------------------------
-compute_and_save_reference = true;
+compute_and_save_reference = false;
 reference_file = 'posterior_reference_baselines_alpha.mat';
 
 if compute_and_save_reference
 
-    T = readtable('posterior0914.csv', ...
+    T = readtable('posterior1024.csv', ...
                   'VariableNamingRule', 'preserve');
 
     theta_all = table2array(T);
@@ -39,7 +39,7 @@ if compute_and_save_reference
         'The posterior file must contain at least the 15 expected columns.');
 
     rng(1);
-    n_keep = 1000;
+    n_keep = 500;
 
     assert(size(theta_all,1) >= n_keep, ...
         'The posterior file contains fewer than %d rows.', n_keep);
@@ -111,7 +111,7 @@ nadh_pdh_baseline = nan(n_keep,1);
 
 
 
-fold_list = sort(unique([logspace(-1, 3, 500), 1]));
+fold_list = sort(unique([logspace(-1, log(20), 50), 1]));
 
 n_grid = length(fold_list);
 
@@ -146,7 +146,7 @@ parfor i = 1:n_keep
     p.enzyme_pta = theta(i,9);
     % p.acetate_constant = theta(i,10);
     p.enzyme_md  = theta(i,11);
-    p.enzyme_f   = theta(i,12);
+    p.enzyme_fumarase   = theta(i,12);
     p.enzyme_ack = theta(i,13);
 
     p.k = theta(i,14);
@@ -304,10 +304,10 @@ plot_posterior_xy_common( ...
     black, ...
     '\alpha (Target NADH/NAD+)', ...
     'TCA cycle flux (mM s^{-1})', 'strict', 0.95, 50, 0.90);
-% ylim([0 0.3]);
-% yticks(linspace(0, 0.3, 4));
-xlim([0.02 0.16]);
-xticks([0.06 0.1 0.14]);
+% ylim([0.05 0.35]);
+% yticks(linspace(0.1, 0.3, 3));
+xlim([0.02 0.14]);
+xticks([0.01 0.05 0.09 0.13]);
 
 apply_journal_style(ax2, [], ...
     'AxisFontSize', 18, ...
@@ -322,11 +322,10 @@ plot_posterior_xy_common( ...
     black, ...
     '\alpha (Target NADH/NAD+)', ...
     'Pta-AckA flux (mM s^{-1})', 'strict', 0.95, 50, 0.90);
-% ylim([5 60]);
-% yticks(linspace(10, 60, 3));
-xlim([0.02 0.16]);
-xticks([0.06 0.1 0.14]);
-
+% ylim([0 1.25]);
+% yticks(linspace(0.2, 1.2, 3));
+xlim([0.02 0.14]);
+xticks([0.01 0.05 0.09 0.13]);
 
 apply_journal_style(ax3, [], ...
     'AxisFontSize', 18, ...
@@ -345,8 +344,8 @@ plot_posterior_xy_common( ...
     'Fermentation ratio', 'strict', 0.95, 50, 0.90);
 % ylim([0 1]);
 % yticks(linspace(0, 1, 3));
-xlim([0.02 0.16]);
-xticks([0.06 0.1 0.14]);
+xlim([0.02 0.14]);
+xticks([0.01 0.05 0.09 0.13]);
 
 apply_journal_style(ax4, [], ...
     'AxisFontSize', 18, ...
@@ -364,7 +363,7 @@ ax2.Position = [0.07, 0.20, 0.21, 0.72];
 ax3.Position = [0.40, 0.20, 0.21, 0.72];
 ax4.Position = [0.73, 0.20, 0.21, 0.72];
 
-export_figure(fig1, 'beta_inhibition_alpha0914');
+% export_figure(fig1, 'beta_inhibition_alpha0914');
 
 
 %%
@@ -628,7 +627,7 @@ function plot_posterior_xy_common(X, Y, lineColor, xlab_txt, ylab_txt, rangeMode
     % Median line
     plot(x_keep, y_med_keep, '-', ...
         'Color', lineColor, ...
-        'LineWidth', 2);
+        'LineWidth', 2.5);
 
     xlabel(xlab_txt);
     ylabel(ylab_txt);

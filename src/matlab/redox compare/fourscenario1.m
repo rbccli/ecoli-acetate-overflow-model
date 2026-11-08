@@ -1,6 +1,6 @@
-clear;       
-clc;          
-close all; 
+% clear;       
+% clc;          
+% close all; 
 
 params = global_parameters_balanced();
 
@@ -14,12 +14,12 @@ params = global_parameters_balanced();
 % For every other manually edited scenario, set this to false. The script
 % will reload exactly the same theta rows and their matching baselines.
 % -------------------------------------------------------------------------
-compute_and_save_reference = true;
+compute_and_save_reference = false;
 reference_file = 'posterior_reference_baselines.mat';
 
 if compute_and_save_reference
 
-    T = readtable('posterior0915.csv', ...
+    T = readtable('posterior1024.csv', ...
                   'VariableNamingRule', 'preserve');
 
     theta_all = table2array(T);
@@ -39,7 +39,7 @@ if compute_and_save_reference
         'The posterior file must contain at least the 15 expected columns.');
 
     rng(1);
-    n_keep = 1000;
+    n_keep = 500;
 
     assert(size(theta_all,1) >= n_keep, ...
         'posterior0915.csv contains fewer than %d rows.', n_keep);
@@ -112,7 +112,7 @@ nadh_pdh_baseline = nan(n_keep,1);
 
 
 
-fold_list = linspace(0.2, 2, 100);
+fold_list = linspace(0.2, 2, 50);
 
 n_grid = length(fold_list);
 
@@ -142,7 +142,7 @@ parfor i = 1:n_keep
     p.enzyme_pta = theta(i,9);
     p.acetate_constant = theta(i,10);
     p.enzyme_md  = theta(i,11);
-    p.enzyme_f   = theta(i,12);
+    p.enzyme_fumarase   = theta(i,12);
     p.enzyme_ack = theta(i,13);
 
     p.k = theta(i,14);
@@ -324,10 +324,10 @@ plot_posterior_xy_common( ...
     'NAD(H) pool size (mM)', ...
     'TCA cycle flux (mM s^{-1})','strict', 0.95, 50, 0.90);
 
-% ylim([0.1 0.3]);
-% yticks(linspace(0.1, 0.3, 3));
-% xlim([0.6 5.5]);
-% xticks([1 3 5]);
+ylim([0.255 0.305]);
+yticks(linspace(0.26, 0.3, 3));
+xlim([0.6 5.5]);
+xticks([1 3 5]);
 
 apply_journal_style(ax2, [], ...
     'AxisFontSize', 18, ...
@@ -342,10 +342,10 @@ plot_posterior_xy_common( ...
     black, ...
     'NAD(H) pool size (mM)', ...
     'Pta-AckA flux (mM s^{-1})','strict', 0.95, 50, 0.90);
-% ylim([0.2 1.2]);
-% yticks(linspace(0.2, 1.2, 3));
-% xlim([0.6 5.5]);
-% xticks([1 3 5]);
+ylim([0.85 1.15]);
+yticks(linspace(0.9, 1.1, 3));
+xlim([0.6 5.5]);
+xticks([1 3 5]);
 
 apply_journal_style(ax3, [], ...
     'AxisFontSize', 18, ...
@@ -362,10 +362,10 @@ plot_posterior_xy_common( ...
     black, ...
     'NAD(H) pool size (mM)', ...
     'Fermentation ratio', 'strict', 0.95, 50, 0.90);
-% ylim([0.4 1]);
-% yticks(linspace(0.4, 1, 3));
-% xlim([0.6 5.5]);
-% xticks([1 3 5]);
+ylim([0.745 0.815]);
+yticks(linspace(0.75, 0.81, 3));
+xlim([0.6 5.5]);
+xticks([1 3 5]);
 
 
 apply_journal_style(ax4, [], ...
@@ -643,7 +643,7 @@ function plot_posterior_xy_common(X, Y, lineColor, xlab_txt, ylab_txt, rangeMode
     % Median line
     plot(x_keep, y_med_keep, '-', ...
         'Color', lineColor, ...
-        'LineWidth', 2); hold on;
+        'LineWidth', 2.5); hold on;
 
     xlabel(xlab_txt);
     ylabel(ylab_txt);

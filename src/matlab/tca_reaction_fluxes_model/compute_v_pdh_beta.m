@@ -10,7 +10,7 @@ function v = compute_v_pdh_beta(pyruvate_con, coa_con, nad_con, acetyl_coa_con, 
 
     denominator = (1 + pyruvate_tilde) .* (1 + coa_tilde) .* (1 + nad_tilde) + (1 + acetyl_coa_tilde) .* (1 + nadh_tilde) .* (1 + co2_tilde) - 1;
 
-    v = (kf_pdh .* pyruvate_tilde .* coa_tilde .* nad_tilde - kr_pdh .* acetyl_coa_tilde .* nadh_tilde .* co2_tilde)./ denominator .* enzyme_pdh .* baseline .* (nadh_inhibition(nadh_con, ki_nadh)./baseline) .^ beta;
+    v = (kf_pdh .* pyruvate_tilde .* coa_tilde .* nad_tilde - kr_pdh .* acetyl_coa_tilde .* nadh_tilde .* co2_tilde)./ denominator .* enzyme_pdh .* baseline .* (nadh_inhibition(nadh_con, ki_nadh)./baseline).^ beta;
 
     % 0.0180112191884325; %
 

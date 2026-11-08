@@ -118,18 +118,18 @@ function params = global_parameters_balanced()
 
 
 
-    params.enzyme_pdh = 2.12;
-    params.enzyme_aco = 1.20;
-    params.enzyme_akd = 0.202;
-    params.enzyme_scs = 0.0321;
+    params.enzyme_pdh = 2.11;
+    params.enzyme_aco = 1.21;
+    params.enzyme_akd = 0.208;
+    params.enzyme_scs = 0.0277;
     params.enzyme_sd  = 0.00911;
-    params.enzyme_pk  = 0.0794;
-    params.enzyme_cs  = 15.9;
-    params.enzyme_id  = 0.0192;
-    params.enzyme_pta = 0.0593;
-    params.enzyme_md  = 0.0536;
-    params.enzyme_fumarase   = 0.00416;
-    params.enzyme_ack = 0.00514;
+    params.enzyme_pk  = 0.0785;
+    params.enzyme_cs  = 15.5;
+    params.enzyme_id  = 0.0190;
+    params.enzyme_pta = 0.0589;
+    params.enzyme_md  = 0.0534;
+    params.enzyme_fumarase   = 0.00412;
+    params.enzyme_ack = 0.00513;
 
 
 
@@ -210,8 +210,8 @@ function params = global_parameters_balanced()
 
 
 
-    params.k = 171; %10000;
-    params.alpha = 0.00633; %0.0545/2.80;
+    params.k = 187; %10000;
+    params.alpha = 0.00627; %0.0545/2.80;
 
 
     params.beta = 0.08;

@@ -614,7 +614,7 @@ model {
     pdh_raw ~ normal(-2,1);
     aco_raw ~ normal(-2,1); // normal(log10(0.005231645),0.3);
     akd_raw ~ normal(-2,1);
-    scs_raw ~ normal(log10(0.012340987),0.5);
+    scs_raw ~ normal(log10(0.0061704935), 0.5);
     sd_raw  ~ normal(-2,1);
     pk_raw  ~ normal(-2,1);
     cs_raw  ~ normal(-2,1);
@@ -626,7 +626,7 @@ model {
     pta_raw  ~ normal(log10(0.000887043),0.5);
     acetate_raw  ~ normal(-1,1);
     
-    k_raw ~ normal(log10(83),0.5);
+    k_raw ~ normal(log10(100),0.5);
     alpha_raw ~ normal(log10(0.0545/2.8),0.5);
 
     sigma_c_raw ~ normal(log10(0.2),0.15);
