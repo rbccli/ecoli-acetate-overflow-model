@@ -24,8 +24,8 @@ All paths below are relative to `src/`.
 
 ## Getting started
 
-Run the R analyses from `src/r_stan/`. Start with `tcaferm_baye_real.R` to fit the model to the experimental observations. The posterior predictive checks, parameter comparisons and diagnostics use the fitted model from that analysis. The fitting script saves its results in a timestamped directory under `src/r_stan/results/`.
+Run the R analyses from src/r_stan/. Start with tcaferm_baye_real.R to fit the model to the experimental observations. The posterior predictive checks, parameter comparisons and diagnostics use the fitted model from that analysis.
 
-For MATLAB analyses, add `src/matlab/` and its subdirectories to the MATLAB path, then run the relevant script from its own directory. Some regulation scripts require posterior samples exported from the R fit and a reference-baseline file. Check their input filenames and scenario settings before running them.
+For MATLAB analyses, add src/matlab/ and its subdirectories to the MATLAB path, then run the relevant script from its own directory. Some regulation scripts require posterior samples exported from the R fit and a reference-baseline file.
 
-The scripts contain the observations and parameter settings used in the analyses; generated results and figures are created when the scripts are run. The repository does not currently include a locked software environment or a licence file.
+The scripts contain the observations and parameter settings used in the analyses; generated results and figures are created when the scripts are run.
