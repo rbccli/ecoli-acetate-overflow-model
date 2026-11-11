@@ -1,6 +1,4 @@
-# TCA paper source code
-
-Source code for **Competing NADH regulation shapes acetate-flux responses in Escherichia coli: a Bayesian kinetic model of the pyruvate–TCA–acetate node**.
+# Supplementary code for **NADH regulation shapes competing acetate flux responses in Escherichia coli : kinetic modelling of the tricarboxylic acid cycle and acetate production**.
 
 The repository contains R/Stan code for Bayesian inference and MATLAB code for kinetic modelling, identifiability, sensitivity and regulation analyses.
 
